@@ -17,6 +17,7 @@ import org.springframework.context.annotation.Configuration;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
@@ -48,7 +49,7 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
-        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(withDefaults());	// Enable OpenID Connect 1.0
+        http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(withDefaults());	// OpenID Connect 1.0 사용
         http.exceptionHandling((exceptions) -> exceptions.defaultAuthenticationEntryPointFor( // 인가 실패에 대한 처리를 정의
                         new LoginUrlAuthenticationEntryPoint("/login"),
                         new MediaTypeRequestMatcher(MediaType.TEXT_HTML)
@@ -63,6 +64,7 @@ public class SecurityConfig {
      */
     @Bean
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
+        http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(authorize -> {
             authorize
                     .requestMatchers("/").permitAll()
@@ -76,7 +78,7 @@ public class SecurityConfig {
     public UserDetailsService userDetailsService() {
         UserDetails userDetails = User.withDefaultPasswordEncoder()
                 .username("user")
-                .password("password")
+                .password("1234")
                 .roles("USER")
                 .build();
 
@@ -101,11 +103,11 @@ public class SecurityConfig {
                 })
                 .redirectUris(uri -> {
                     uri.add("https://naver.com");
-                    uri.add("http://127.0.0.1:3000");
-                    uri.add("http://127.0.0.1:9000");
-                    uri.add("http://127.0.0.1:9000/login/oauth2/code/your-client");
+                    uri.add("http://localhost:3000");
+                    uri.add("http://localhost:9000");
+                    uri.add("http://localhost:9000/login/oauth2/code/your-client");
                 })
-                .postLogoutRedirectUri("http://127.0.0.1:9000")
+                .postLogoutRedirectUri("http://localhost:9000")
                 .scopes(scope -> {
                     scope.add(OidcScopes.OPENID);
                     scope.add(OidcScopes.PROFILE);
@@ -126,10 +128,7 @@ public class SecurityConfig {
         KeyPair keyPair = generateRsaKey();
         RSAPublicKey publicKey = (RSAPublicKey) keyPair.getPublic();
         RSAPrivateKey privateKey = (RSAPrivateKey) keyPair.getPrivate();
-        RSAKey rsaKey = new RSAKey.Builder(publicKey)
-                .privateKey(privateKey)
-                .keyID(UUID.randomUUID().toString())
-                .build();
+        RSAKey rsaKey = new RSAKey.Builder(publicKey).privateKey(privateKey).keyID(UUID.randomUUID().toString()).build();
         JWKSet jwkSet = new JWKSet(rsaKey);
         return new ImmutableJWKSet<>(jwkSet);
     }
@@ -160,7 +159,6 @@ public class SecurityConfig {
     @Bean
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
-                .issuer("http://localhost:9000")
                 .build();
     }
 
