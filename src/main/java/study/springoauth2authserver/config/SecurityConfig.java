@@ -102,17 +102,12 @@ public class SecurityConfig {
                     types.add(AuthorizationGrantType.REFRESH_TOKEN);
                 })
                 .redirectUris(uri -> {
-                    uri.add("https://naver.com");
                     uri.add("http://localhost:3000");
-                    uri.add("http://localhost:9000");
-                    uri.add("http://localhost:9000/login/oauth2/code/your-client");
                 })
-                .postLogoutRedirectUri("http://localhost:9000")
+                .postLogoutRedirectUri("http://localhost:3000")
                 .scopes(scope -> {
                     scope.add(OidcScopes.OPENID);
                     scope.add(OidcScopes.PROFILE);
-                    scope.add("read");
-                    scope.add("write");
                 })
                 .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
                 .build();
