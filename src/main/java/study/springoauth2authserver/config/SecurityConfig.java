@@ -14,9 +14,11 @@ import com.nimbusds.jose.proc.SecurityContext;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.userdetails.User;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -47,6 +49,7 @@ public class SecurityConfig {
      * Protocol endpoints 를 위한 설정
      */
     @Bean
+    @Order(1)
     public SecurityFilterChain authorizationServerSecurityFilterChain(HttpSecurity http) throws Exception {
         OAuth2AuthorizationServerConfiguration.applyDefaultSecurity(http);
         http.getConfigurer(OAuth2AuthorizationServerConfigurer.class).oidc(withDefaults());	// OpenID Connect 1.0 사용
@@ -63,14 +66,22 @@ public class SecurityConfig {
      * 인증(Authentication)을 위한 설정
      */
     @Bean
+    @Order(2)
     public SecurityFilterChain defaultSecurityFilterChain(HttpSecurity http) throws Exception {
         http.csrf(AbstractHttpConfigurer::disable);
         http.authorizeHttpRequests(authorize -> {
             authorize
                     .requestMatchers("/").permitAll()
+                    .requestMatchers("/error").permitAll()
                     .anyRequest().authenticated();
         });
-        http.formLogin(withDefaults());
+        http.formLogin(configurer -> {
+            configurer.loginPage("/login").permitAll();
+        });
+        http.logout(configurer -> {
+            configurer.logoutSuccessUrl("/");
+        });
+//        http.formLogin(withDefaults());
         return http.build();
     }
 
@@ -155,6 +166,13 @@ public class SecurityConfig {
     public AuthorizationServerSettings authorizationServerSettings() {
         return AuthorizationServerSettings.builder()
                 .build();
+    }
+
+    @Bean
+    public WebSecurityCustomizer webSecurityCustomizer() {
+        return web -> web.debug(false)
+                .ignoring()
+                .requestMatchers("/webjars/**", "/images/**", "/css/**", "/assets/**", "/favicon.ico");
     }
 
 }
