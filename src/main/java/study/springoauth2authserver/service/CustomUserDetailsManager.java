@@ -57,14 +57,14 @@ public class CustomUserDetailsManager implements UserDetailsManager {
 
     @Override
     public void changePassword(String oldPassword, String newPassword) {
-        Authentication currentUser = this.securityContextHolderStrategy.getContext().getAuthentication();
-        if (currentUser == null) {
-            throw new AccessDeniedException("Can't change password as no Authentication object found in context for current user.");
-        } else {
-            String username = currentUser.getName();
-            User entity = userRepository.findByUsername(username);
-            entity.updatePassword(passwordEncoder.encode(oldPassword), passwordEncoder.encode(newPassword));
-        }
+//        Authentication currentUser = this.securityContextHolderStrategy.getContext().getAuthentication();
+//        if (currentUser == null) {
+//            throw new AccessDeniedException("Can't change password as no Authentication object found in context for current user.");
+//        } else {
+//            String username = currentUser.getName();
+//            User entity = userRepository.findByUsername(username);
+//            entity.updatePassword(passwordEncoder.encode(oldPassword), passwordEncoder.encode(newPassword));
+//        }
     }
 
     @Override
