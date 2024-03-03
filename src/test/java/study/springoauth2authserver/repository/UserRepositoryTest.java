@@ -7,6 +7,7 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import study.springoauth2authserver.entity.Authority;
 import study.springoauth2authserver.entity.User;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -18,6 +19,8 @@ class UserRepositoryTest {
 
     @Autowired
     UserRepository userRepository;
+    @Autowired
+    AuthorityRepository authorityRepository;
 
     @Autowired
     BCryptPasswordEncoder passwordEncoder;
@@ -27,7 +30,10 @@ class UserRepositoryTest {
     @DisplayName("createUser")
     public void createUser() throws Exception {
         User entity = User.create("hello", passwordEncoder.encode("1234"));
-        userRepository.save(entity);
+        User user = userRepository.save(entity);
+
+        Authority authority = Authority.builder().authority("USER").user(user).build();
+        authorityRepository.save(authority);
     }
 
 }

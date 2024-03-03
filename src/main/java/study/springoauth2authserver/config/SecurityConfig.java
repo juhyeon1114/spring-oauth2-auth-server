@@ -22,17 +22,10 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.oauth2.core.AuthorizationGrantType;
-import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
-import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
-import org.springframework.security.oauth2.server.authorization.client.InMemoryRegisteredClientRepository;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
-import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
-import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
@@ -87,36 +80,6 @@ public class SecurityConfig {
         });
 //        http.formLogin(withDefaults());
         return http.build();
-    }
-
-    /**
-     * 클라이언트의 정보를 등록하고 관리하는 역할을 한다.
-     */
-    @Bean
-    public RegisteredClientRepository registeredClientRepository() {
-        RegisteredClient oidcClient = RegisteredClient.withId(UUID.randomUUID().toString())
-                .clientName("Your client name")
-                .clientId("your-client")
-                .clientSecret("{noop}your-secret") // 실제 운영환경에서는 임의의 문자열을 사용하고, 코드에 올리면 안됨
-                .clientAuthenticationMethods(methods -> {
-                    methods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
-                })
-                .authorizationGrantTypes(types -> {
-                    types.add(AuthorizationGrantType.AUTHORIZATION_CODE);
-                    types.add(AuthorizationGrantType.REFRESH_TOKEN);
-                })
-                .redirectUris(uri -> {
-                    uri.add("http://localhost:3000");
-                })
-                .postLogoutRedirectUri("http://localhost:3000")
-                .scopes(scope -> {
-                    scope.add(OidcScopes.OPENID);
-                    scope.add(OidcScopes.PROFILE);
-                })
-                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
-                .build();
-
-        return new InMemoryRegisteredClientRepository(oidcClient);
     }
 
     /**
