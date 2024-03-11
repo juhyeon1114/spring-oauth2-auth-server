@@ -1,4 +1,4 @@
-package study.springoauth2authserver.entity;
+package study.springoauth2authserver.entity.client;
 
 import jakarta.persistence.*;
 import lombok.*;

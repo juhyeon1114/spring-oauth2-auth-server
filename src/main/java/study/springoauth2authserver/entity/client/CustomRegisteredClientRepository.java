@@ -1,11 +1,12 @@
-package study.springoauth2authserver.repository;
+package study.springoauth2authserver.entity.client;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.stereotype.Component;
-import study.springoauth2authserver.entity.Client;
-import study.springoauth2authserver.util.ClientUtils;
+import study.springoauth2authserver.entity.client.Client;
+import study.springoauth2authserver.entity.client.ClientRepository;
+import study.springoauth2authserver.entity.client.ClientUtils;
 
 @Component
 @RequiredArgsConstructor

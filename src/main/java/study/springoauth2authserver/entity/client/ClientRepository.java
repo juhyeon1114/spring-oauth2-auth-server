@@ -1,7 +1,7 @@
-package study.springoauth2authserver.repository;
+package study.springoauth2authserver.entity.client;
 
 import org.springframework.data.jpa.repository.JpaRepository;
-import study.springoauth2authserver.entity.Client;
+import study.springoauth2authserver.entity.client.Client;
 
 import java.util.Optional;
 

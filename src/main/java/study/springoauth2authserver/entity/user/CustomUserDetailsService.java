@@ -1,4 +1,4 @@
-package study.springoauth2authserver.service;
+package study.springoauth2authserver.entity.user;
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
@@ -7,8 +7,8 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Component;
-import study.springoauth2authserver.entity.User;
-import study.springoauth2authserver.repository.UserRepository;
+import study.springoauth2authserver.entity.user.User;
+import study.springoauth2authserver.entity.user.UserRepository;
 
 @Slf4j
 @Transactional

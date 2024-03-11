@@ -1,8 +1,8 @@
-package study.springoauth2authserver.repository;
+package study.springoauth2authserver.entity.user;
 
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
-import study.springoauth2authserver.entity.User;
+import study.springoauth2authserver.entity.user.User;
 
 public interface UserRepository extends JpaRepository<User, Long> {
 

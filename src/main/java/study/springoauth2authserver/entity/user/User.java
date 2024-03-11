@@ -1,4 +1,4 @@
-package study.springoauth2authserver.entity;
+package study.springoauth2authserver.entity.user;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import jakarta.persistence.*;
@@ -7,6 +7,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.userdetails.UserDetails;
+import study.springoauth2authserver.entity.authority.Authority;
 
 import java.util.ArrayList;
 import java.util.List;

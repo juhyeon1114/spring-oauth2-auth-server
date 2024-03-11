@@ -1,4 +1,4 @@
-package study.springoauth2authserver.entity;
+package study.springoauth2authserver.entity.authority;
 
 import jakarta.persistence.*;
 import lombok.AllArgsConstructor;
@@ -6,6 +6,7 @@ import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
+import study.springoauth2authserver.entity.user.User;
 
 @Getter
 @Entity

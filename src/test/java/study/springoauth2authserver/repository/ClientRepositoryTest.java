@@ -12,8 +12,9 @@ import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
 import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
 import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
-import study.springoauth2authserver.entity.Client;
-import study.springoauth2authserver.util.ClientUtils;
+import study.springoauth2authserver.entity.client.Client;
+import study.springoauth2authserver.entity.client.ClientRepository;
+import study.springoauth2authserver.entity.client.ClientUtils;
 
 import java.util.UUID;
 

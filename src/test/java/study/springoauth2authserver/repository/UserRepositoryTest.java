@@ -7,10 +7,10 @@ import org.junit.jupiter.api.TestInstance;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import study.springoauth2authserver.entity.Authority;
-import study.springoauth2authserver.entity.User;
-
-import static org.junit.jupiter.api.Assertions.*;
+import study.springoauth2authserver.entity.authority.Authority;
+import study.springoauth2authserver.entity.authority.AuthorityRepository;
+import study.springoauth2authserver.entity.user.User;
+import study.springoauth2authserver.entity.user.UserRepository;
 
 @Slf4j
 @SpringBootTest
