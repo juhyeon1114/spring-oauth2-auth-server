@@ -8,8 +8,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import com.fasterxml.jackson.databind.Module;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jose.jwk.JWKSet;
 import com.nimbusds.jose.jwk.RSAKey;
 import com.nimbusds.jose.jwk.source.ImmutableJWKSet;
@@ -17,34 +15,42 @@ import com.nimbusds.jose.jwk.source.JWKSource;
 import com.nimbusds.jose.proc.SecurityContext;
 
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.annotation.Order;
 import org.springframework.http.MediaType;
+import org.springframework.jdbc.core.JdbcOperations;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityCustomizer;
 import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
-import org.springframework.security.core.userdetails.UserDetailsService;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.security.jackson2.SecurityJackson2Modules;
+import org.springframework.security.oauth2.core.AuthorizationGrantType;
+import org.springframework.security.oauth2.core.ClientAuthenticationMethod;
+import org.springframework.security.oauth2.core.oidc.OidcScopes;
 import org.springframework.security.oauth2.jwt.JwtDecoder;
+import org.springframework.security.oauth2.server.authorization.JdbcOAuth2AuthorizationService;
 import org.springframework.security.oauth2.server.authorization.OAuth2TokenType;
+import org.springframework.security.oauth2.server.authorization.client.JdbcRegisteredClientRepository;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClient;
+import org.springframework.security.oauth2.server.authorization.client.RegisteredClientRepository;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configuration.OAuth2AuthorizationServerConfiguration;
 import org.springframework.security.oauth2.server.authorization.config.annotation.web.configurers.OAuth2AuthorizationServerConfigurer;
-import org.springframework.security.oauth2.server.authorization.jackson2.OAuth2AuthorizationServerJackson2Module;
 import org.springframework.security.oauth2.server.authorization.settings.AuthorizationServerSettings;
+import org.springframework.security.oauth2.server.authorization.settings.ClientSettings;
 import org.springframework.security.oauth2.server.authorization.token.JwtEncodingContext;
 import org.springframework.security.oauth2.server.authorization.token.OAuth2TokenCustomizer;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.LoginUrlAuthenticationEntryPoint;
 import org.springframework.security.web.util.matcher.MediaTypeRequestMatcher;
-import study.springoauth2authserver.entity.authority.Authority;
-import study.springoauth2authserver.entity.authorization.CustomOAuth2AuthorizationService;
+import study.springoauth2authserver.entity.user.CustomUserDetailsService;
 import study.springoauth2authserver.entity.user.User;
 
 import static org.springframework.security.config.Customizer.withDefaults;
 
+@Slf4j
 @Configuration
 @EnableWebSecurity
 @RequiredArgsConstructor
@@ -53,16 +59,6 @@ public class SecurityConfig {
     @Bean
     public static BCryptPasswordEncoder passwordEncoder() {
         return new BCryptPasswordEncoder();
-    }
-
-    @Bean
-    public ObjectMapper objectMapper() {
-        ObjectMapper objectMapper = new ObjectMapper();
-        ClassLoader classLoader = CustomOAuth2AuthorizationService.class.getClassLoader();
-        List<Module> securityModules = SecurityJackson2Modules.getModules(classLoader);
-        objectMapper.registerModules(securityModules);
-        objectMapper.registerModule(new OAuth2AuthorizationServerJackson2Module());
-        return objectMapper;
     }
 
     /**
@@ -155,19 +151,60 @@ public class SecurityConfig {
     }
 
     @Bean
-    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(UserDetailsService userDetailsService) {
+    public OAuth2TokenCustomizer<JwtEncodingContext> jwtTokenCustomizer(CustomUserDetailsService userDetailsService) {
         return (context) -> {
             OAuth2TokenType tokenType = context.getTokenType();
             if (OAuth2TokenType.ACCESS_TOKEN.equals(tokenType)) {
                 String username = context.getPrincipal().getName();
-                User user = (User) userDetailsService.loadUserByUsername(username);
-                List<Authority> authorities = user.getAuthorities();
+                User user = userDetailsService.getUserByUsername(username);
+                List<SimpleGrantedAuthority> authorities = user.getSimpleAuthorities();
                 context.getClaims().claims((claims) -> {
-                    claims.put("id", user.getId());
-                    claims.put("authorities", authorities.stream().map(Authority::getAuthority).collect(Collectors.toList()));
+                    claims.put("id", String.valueOf(user.getId()));
+                    claims.put("authorities", authorities.stream().map(SimpleGrantedAuthority::getAuthority).collect(Collectors.toList()));
                 });
             }
         };
+    }
+
+    @Bean
+    public RegisteredClientRepository registeredClientRepository(JdbcOperations jdbcOperations) {
+        RegisteredClient registeredClient = RegisteredClient.withId(UUID.randomUUID().toString())
+                .clientName("Your client name")
+                .clientId("your-client")
+                .clientSecret(passwordEncoder().encode("your-secret"))
+                .clientAuthenticationMethods(methods -> {
+                    methods.add(ClientAuthenticationMethod.CLIENT_SECRET_BASIC);
+                })
+                .authorizationGrantTypes(types -> {
+                    types.add(AuthorizationGrantType.AUTHORIZATION_CODE);
+                    types.add(AuthorizationGrantType.REFRESH_TOKEN);
+                })
+                .redirectUris(uri -> {
+                    uri.add("http://localhost:3000");
+                })
+                .postLogoutRedirectUris(uri -> {
+                    uri.add("http://localhost:3000");
+                })
+                .scopes(scope -> {
+                    scope.add(OidcScopes.OPENID);
+                    scope.add(OidcScopes.PROFILE);
+                })
+                .clientSettings(ClientSettings.builder().requireAuthorizationConsent(false).build())
+                .build();
+
+        JdbcRegisteredClientRepository registeredClientRepository = new JdbcRegisteredClientRepository(jdbcOperations);
+        try {
+            registeredClientRepository.save(registeredClient);
+        } catch (IllegalArgumentException e) {
+            log.warn("이미 존재하는 클라이언트 : {}", e.getMessage());
+        }
+
+        return registeredClientRepository;
+    }
+
+    @Bean
+    public JdbcOAuth2AuthorizationService authorizationService(JdbcOperations jdbcOperations, RegisteredClientRepository registeredClientRepository) {
+        return new JdbcOAuth2AuthorizationService(jdbcOperations, registeredClientRepository);
     }
 
 }

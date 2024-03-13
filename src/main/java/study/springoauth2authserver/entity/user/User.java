@@ -6,6 +6,7 @@ import lombok.AllArgsConstructor;
 import lombok.Builder;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.userdetails.UserDetails;
 import study.springoauth2authserver.entity.authority.Authority;
 
@@ -65,6 +66,10 @@ public class User implements UserDetails {
                 .credentialsNonExpired(true)
                 .enabled(true)
                 .build();
+    }
+
+    public List<SimpleGrantedAuthority> getSimpleAuthorities() {
+        return this.authorities.stream().map(authority -> new SimpleGrantedAuthority(authority.getAuthority())).toList();
     }
 
 }
